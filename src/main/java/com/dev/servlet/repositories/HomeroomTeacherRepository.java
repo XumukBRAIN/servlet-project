@@ -13,8 +13,7 @@ import java.util.List;
 
 import static com.dev.servlet.utils.Constant.CommonConstants.*;
 import static com.dev.servlet.utils.Constant.HomeroomTeacherConstants.SPECIALIZATION;
-import static com.dev.servlet.utils.Constant.StudentConstants.BIRTHDATE;
-import static com.dev.servlet.utils.Constant.StudentConstants.FACULTY;
+import static com.dev.servlet.utils.Constant.StudentConstants.*;
 
 public class HomeroomTeacherRepository {
 
@@ -23,7 +22,7 @@ public class HomeroomTeacherRepository {
     private static final String GET_BY_ID_SCRIPT = "SELECT * FROM homeroom_teacher WHERE id = ?";
     private static final String DELETE_BY_ID_SCRIPT = "DELETE FROM homeroom_teacher WHERE id = ?";
     private static final String GET_BY_ID_SCRIPT_WITH_STUDENTS = "SELECT h.firstname, h.secondname, h.patronymic, h.specialization, " +
-            "s.firstname, s.secondname, s.patronymic, s.birthdate, s.faculty" +
+            "s.firstname as student_firstname, s.secondname as student_secondname, s.patronymic as student_patronymic, s.birthdate, s.faculty" +
             "FROM homeroom_teacher h " +
             "LEFT JOIN student s ON h.id = s.student_id " +
             "WHERE h.id = ?";
@@ -113,9 +112,9 @@ public class HomeroomTeacherRepository {
         ) {
             while (resultSet.next()) {
                 Student student = new Student();
-                student.setFirstName(resultSet.getString(FIRSTNAME));
-                student.setSecondName(resultSet.getString(SECONDNAME));
-                student.setPatronymic(resultSet.getString(PATRONYMIC));
+                student.setFirstName(resultSet.getString(STUDENT_FIRSTNAME));
+                student.setSecondName(resultSet.getString(STUDENT_SECONDNAME));
+                student.setPatronymic(resultSet.getString(STUDENT_PATRONYMIC));
                 student.setBirthdate(resultSet.getDate(BIRTHDATE));
                 student.setFaculty(resultSet.getString(FACULTY));
                 students.add(student);
