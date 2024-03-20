@@ -51,7 +51,7 @@ public class InstanceConfiguration {
 
     public static HomeroomTeacherRepository getHomeroomTeacherRepositoryInstance() {
         if (homeroomTeacherRepository == null) {
-            homeroomTeacherRepository = new HomeroomTeacherRepository();
+            homeroomTeacherRepository = new HomeroomTeacherRepository("url", "username", "password");
         }
 
         return homeroomTeacherRepository;

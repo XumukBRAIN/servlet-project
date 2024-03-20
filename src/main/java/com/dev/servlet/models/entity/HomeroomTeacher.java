@@ -83,4 +83,14 @@ public class HomeroomTeacher {
     public void setStudents(List<Student> students) {
         this.students = students;
     }
+
+    @Override
+    public String toString() {
+        return "HomeroomTeacher{" +
+                ", firstName='" + firstName + '\'' +
+                ", secondName='" + secondName + '\'' +
+                ", patronymic='" + patronymic + '\'' +
+                ", specialization='" + specialization + '\'' +
+                '}';
+    }
 }

@@ -6,6 +6,7 @@ import com.dev.servlet.models.entity.Student;
 import com.dev.servlet.utils.QueryBuilder;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -17,6 +18,10 @@ import static com.dev.servlet.utils.Constant.StudentConstants.*;
 
 public class HomeroomTeacherRepository {
 
+    private final String url;
+    private final String username;
+    private final String password;
+
     private static final String SAVE_SCRIPT = "INSERT INTO homeroom_teacher(firstname, secondname, patronymic, specialization) VALUES (?, ?, ?, ?)";
     private static final String GET_ALL_SCRIPT = "SELECT * FROM homeroom_teacher";
     private static final String GET_BY_ID_SCRIPT = "SELECT * FROM homeroom_teacher WHERE id = ?";
@@ -27,13 +32,19 @@ public class HomeroomTeacherRepository {
             "LEFT JOIN student s ON h.id = s.student_id " +
             "WHERE h.id = ?";
 
+    public HomeroomTeacherRepository(String url, String username, String password) {
+        this.url = url;
+        this.username = username;
+        this.password = password;
+    }
+
     public void save(HomeroomTeacher homeroomTeacher) {
         if (homeroomTeacher == null) {
             throw new RuntimeException("Не переданы данные для создания классного руководителя");
         }
 
         try (
-                Connection connection = DataSourceConfiguration.getDataSource().getConnection();
+                Connection connection = DriverManager.getConnection(url, username, password);
                 PreparedStatement ps = connection.prepareStatement(SAVE_SCRIPT)
         ) {
             ps.setString(1, homeroomTeacher.getFirstName());
@@ -59,7 +70,7 @@ public class HomeroomTeacherRepository {
         // Построение запроса для обновления классного руководителя
         QueryBuilder query = QueryBuilder.buildUpdateHomeroomTeacherQuery(id, homeroomTeacher);
         try (
-                Connection connection = DataSourceConfiguration.getDataSource().getConnection();
+                Connection connection = DriverManager.getConnection(url, username, password);
                 PreparedStatement ps = connection.prepareStatement(query.getQueryBuilder().toString())
         ) {
             // Простановка параметров запроса, см. QueryBuild.buildUpdateStudentQuery
@@ -79,7 +90,7 @@ public class HomeroomTeacherRepository {
         }
 
         try (
-                Connection connection = DataSourceConfiguration.getDataSource().getConnection();
+                Connection connection = DriverManager.getConnection(url, username, password);
                 PreparedStatement ps = connection.prepareStatement(GET_BY_ID_SCRIPT);
                 ResultSet resultSet = ps.executeQuery()
         ) {
@@ -106,7 +117,7 @@ public class HomeroomTeacherRepository {
         HomeroomTeacher homeroomTeacher = null;
         List<Student> students = new ArrayList<>();
         try (
-                Connection connection = DataSourceConfiguration.getDataSource().getConnection();
+                Connection connection = DriverManager.getConnection(url, username, password);
                 PreparedStatement ps = connection.prepareStatement(GET_BY_ID_SCRIPT_WITH_STUDENTS);
                 ResultSet resultSet = ps.executeQuery()
         ) {
@@ -141,7 +152,7 @@ public class HomeroomTeacherRepository {
     public List<HomeroomTeacher> getAll() {
         List<HomeroomTeacher> homeroomTeachers = new ArrayList<>();
         try (
-                Connection connection = DataSourceConfiguration.getDataSource().getConnection();
+                Connection connection = DriverManager.getConnection(url, username, password);
                 PreparedStatement ps = connection.prepareStatement(GET_ALL_SCRIPT);
                 ResultSet resultSet = ps.executeQuery()
         ) {
@@ -166,7 +177,7 @@ public class HomeroomTeacherRepository {
         }
 
         try (
-                Connection connection = DataSourceConfiguration.getDataSource().getConnection();
+                Connection connection = DriverManager.getConnection(url, username, password);
                 PreparedStatement ps = connection.prepareStatement(DELETE_BY_ID_SCRIPT)
         ) {
             ps.setInt(1, id);
