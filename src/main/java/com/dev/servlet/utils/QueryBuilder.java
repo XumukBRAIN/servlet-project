@@ -82,6 +82,13 @@ public class QueryBuilder {
                 .build();
     }
 
+    /**
+     * Построение запроса для обновления классного руководителя
+     *
+     * @param id Идентификатор классного руководителя
+     * @param homeroomTeacher Данные классного руководителя
+     * @return QueryBuilder
+     */
     public static QueryBuilder buildUpdateHomeroomTeacherQuery(Integer id, HomeroomTeacher homeroomTeacher) {
         StringBuilder queryBuilder = new StringBuilder("UPDATE homeroom_teacher SET ");
         List<Object> queryParams = new ArrayList<>();

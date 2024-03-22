@@ -87,10 +87,11 @@ public class HomeroomTeacher {
     @Override
     public String toString() {
         return "HomeroomTeacher{" +
-                ", firstName='" + firstName + '\'' +
+                "firstName='" + firstName + '\'' +
                 ", secondName='" + secondName + '\'' +
                 ", patronymic='" + patronymic + '\'' +
                 ", specialization='" + specialization + '\'' +
+                ", students='" + students + '\'' +
                 '}';
     }
 }

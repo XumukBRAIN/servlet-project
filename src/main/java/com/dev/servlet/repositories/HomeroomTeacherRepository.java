@@ -1,42 +1,49 @@
 package com.dev.servlet.repositories;
 
-import com.dev.servlet.configs.DataSourceConfiguration;
 import com.dev.servlet.models.entity.HomeroomTeacher;
 import com.dev.servlet.models.entity.Student;
 import com.dev.servlet.utils.QueryBuilder;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static com.dev.servlet.utils.Constant.CommonConstants.*;
 import static com.dev.servlet.utils.Constant.HomeroomTeacherConstants.SPECIALIZATION;
+import static com.dev.servlet.utils.Constant.JDBCFieldsConstants.DRIVER;
+import static com.dev.servlet.utils.Constant.JDBCFieldsConstants.URL;
 import static com.dev.servlet.utils.Constant.StudentConstants.*;
 
 public class HomeroomTeacherRepository {
 
-    private final String url;
-    private final String username;
-    private final String password;
+    private final DataSource dataSource;
+
+    public HomeroomTeacherRepository(Map<String, Object> dataSourceProperties) {
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl((String) dataSourceProperties.get(URL));
+        config.setUsername((String) dataSourceProperties.get(USERNAME));
+        config.setPassword((String) dataSourceProperties.get(PASSWORD));
+        config.setDriverClassName((String) dataSourceProperties.get(DRIVER));
+
+        dataSource = new HikariDataSource(config);
+    }
 
     private static final String SAVE_SCRIPT = "INSERT INTO homeroom_teacher(firstname, secondname, patronymic, specialization) VALUES (?, ?, ?, ?)";
     private static final String GET_ALL_SCRIPT = "SELECT * FROM homeroom_teacher";
     private static final String GET_BY_ID_SCRIPT = "SELECT * FROM homeroom_teacher WHERE id = ?";
     private static final String DELETE_BY_ID_SCRIPT = "DELETE FROM homeroom_teacher WHERE id = ?";
     private static final String GET_BY_ID_SCRIPT_WITH_STUDENTS = "SELECT h.firstname, h.secondname, h.patronymic, h.specialization, " +
-            "s.firstname as student_firstname, s.secondname as student_secondname, s.patronymic as student_patronymic, s.birthdate, s.faculty" +
+            "s.firstname as student_firstname, s.secondname as student_secondname, s.patronymic as student_patronymic, s.birthdate, s.faculty " +
             "FROM homeroom_teacher h " +
-            "LEFT JOIN student s ON h.id = s.student_id " +
+            "LEFT JOIN student s ON h.id = s.id " +
             "WHERE h.id = ?";
-
-    public HomeroomTeacherRepository(String url, String username, String password) {
-        this.url = url;
-        this.username = username;
-        this.password = password;
-    }
 
     public void save(HomeroomTeacher homeroomTeacher) {
         if (homeroomTeacher == null) {
@@ -44,7 +51,7 @@ public class HomeroomTeacherRepository {
         }
 
         try (
-                Connection connection = DriverManager.getConnection(url, username, password);
+                Connection connection = dataSource.getConnection();
                 PreparedStatement ps = connection.prepareStatement(SAVE_SCRIPT)
         ) {
             ps.setString(1, homeroomTeacher.getFirstName());
@@ -70,7 +77,7 @@ public class HomeroomTeacherRepository {
         // Построение запроса для обновления классного руководителя
         QueryBuilder query = QueryBuilder.buildUpdateHomeroomTeacherQuery(id, homeroomTeacher);
         try (
-                Connection connection = DriverManager.getConnection(url, username, password);
+                Connection connection = dataSource.getConnection();
                 PreparedStatement ps = connection.prepareStatement(query.getQueryBuilder().toString())
         ) {
             // Простановка параметров запроса, см. QueryBuild.buildUpdateStudentQuery
@@ -90,17 +97,19 @@ public class HomeroomTeacherRepository {
         }
 
         try (
-                Connection connection = DriverManager.getConnection(url, username, password);
-                PreparedStatement ps = connection.prepareStatement(GET_BY_ID_SCRIPT);
-                ResultSet resultSet = ps.executeQuery()
+                Connection connection = dataSource.getConnection();
+                PreparedStatement ps = connection.prepareStatement(GET_BY_ID_SCRIPT)
         ) {
-            if (resultSet.next()) {
-                HomeroomTeacher homeroomTeacher = new HomeroomTeacher();
-                homeroomTeacher.setFirstName(resultSet.getString(FIRSTNAME));
-                homeroomTeacher.setSecondName(resultSet.getString(SECONDNAME));
-                homeroomTeacher.setPatronymic(resultSet.getString(PATRONYMIC));
-                homeroomTeacher.setSpecialization(resultSet.getString(SPECIALIZATION));
-                return homeroomTeacher;
+            ps.setInt(1, id);
+            try (ResultSet resultSet = ps.executeQuery()) {
+                if (resultSet.next()) {
+                    HomeroomTeacher homeroomTeacher = new HomeroomTeacher();
+                    homeroomTeacher.setFirstName(resultSet.getString(FIRSTNAME));
+                    homeroomTeacher.setSecondName(resultSet.getString(SECONDNAME));
+                    homeroomTeacher.setPatronymic(resultSet.getString(PATRONYMIC));
+                    homeroomTeacher.setSpecialization(resultSet.getString(SPECIALIZATION));
+                    return homeroomTeacher;
+                }
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -111,31 +120,35 @@ public class HomeroomTeacherRepository {
 
     public HomeroomTeacher getByIdWithStudents(Integer id) {
         if (id == null) {
-            throw new RuntimeException("Не передан идентификатор классного руководителя для поиска");
+            throw new IllegalArgumentException("Не передан идентификатор классного руководителя для поиска");
         }
 
         HomeroomTeacher homeroomTeacher = null;
         List<Student> students = new ArrayList<>();
         try (
-                Connection connection = DriverManager.getConnection(url, username, password);
-                PreparedStatement ps = connection.prepareStatement(GET_BY_ID_SCRIPT_WITH_STUDENTS);
-                ResultSet resultSet = ps.executeQuery()
+                Connection connection = dataSource.getConnection();
+                PreparedStatement ps = connection.prepareStatement(GET_BY_ID_SCRIPT_WITH_STUDENTS)
         ) {
-            while (resultSet.next()) {
-                Student student = new Student();
-                student.setFirstName(resultSet.getString(STUDENT_FIRSTNAME));
-                student.setSecondName(resultSet.getString(STUDENT_SECONDNAME));
-                student.setPatronymic(resultSet.getString(STUDENT_PATRONYMIC));
-                student.setBirthdate(resultSet.getDate(BIRTHDATE));
-                student.setFaculty(resultSet.getString(FACULTY));
-                students.add(student);
+            ps.setInt(1, id);
+            try (
+                    ResultSet resultSet = ps.executeQuery()
+            ) {
+                while (resultSet.next()) {
+                    Student student = new Student();
+                    student.setFirstName(resultSet.getString(STUDENT_FIRSTNAME));
+                    student.setSecondName(resultSet.getString(STUDENT_SECONDNAME));
+                    student.setPatronymic(resultSet.getString(STUDENT_PATRONYMIC));
+                    student.setBirthdate(resultSet.getDate(BIRTHDATE));
+                    student.setFaculty(resultSet.getString(FACULTY));
+                    students.add(student);
 
-                if (homeroomTeacher == null) {
-                    homeroomTeacher = new HomeroomTeacher();
-                    homeroomTeacher.setFirstName(resultSet.getString(FIRSTNAME));
-                    homeroomTeacher.setSecondName(resultSet.getString(SECONDNAME));
-                    homeroomTeacher.setPatronymic(resultSet.getString(PATRONYMIC));
-                    homeroomTeacher.setSpecialization(resultSet.getString(SPECIALIZATION));
+                    if (homeroomTeacher == null) {
+                        homeroomTeacher = new HomeroomTeacher();
+                        homeroomTeacher.setFirstName(resultSet.getString(FIRSTNAME));
+                        homeroomTeacher.setSecondName(resultSet.getString(SECONDNAME));
+                        homeroomTeacher.setPatronymic(resultSet.getString(PATRONYMIC));
+                        homeroomTeacher.setSpecialization(resultSet.getString(SPECIALIZATION));
+                    }
                 }
             }
 
@@ -144,7 +157,7 @@ public class HomeroomTeacherRepository {
             }
 
             return homeroomTeacher;
-        } catch (Exception e) {
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
@@ -152,7 +165,7 @@ public class HomeroomTeacherRepository {
     public List<HomeroomTeacher> getAll() {
         List<HomeroomTeacher> homeroomTeachers = new ArrayList<>();
         try (
-                Connection connection = DriverManager.getConnection(url, username, password);
+                Connection connection = dataSource.getConnection();
                 PreparedStatement ps = connection.prepareStatement(GET_ALL_SCRIPT);
                 ResultSet resultSet = ps.executeQuery()
         ) {
@@ -177,7 +190,7 @@ public class HomeroomTeacherRepository {
         }
 
         try (
-                Connection connection = DriverManager.getConnection(url, username, password);
+                Connection connection = dataSource.getConnection();
                 PreparedStatement ps = connection.prepareStatement(DELETE_BY_ID_SCRIPT)
         ) {
             ps.setInt(1, id);

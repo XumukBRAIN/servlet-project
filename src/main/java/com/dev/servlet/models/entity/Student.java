@@ -96,4 +96,17 @@ public class Student {
     public void setHomeroomTeacherId(Integer homeroomTeacherId) {
         this.homeroomTeacherId = homeroomTeacherId;
     }
+
+    @Override
+    public String toString() {
+        return "Student{" +
+                "firstName='" + firstName + '\'' +
+                ", secondName='" + secondName + '\'' +
+                ", patronymic='" + patronymic + '\'' +
+                ", birthdate=" + birthdate +
+                ", faculty='" + faculty + '\'' +
+                ", homeroomTeacherId=" + homeroomTeacherId +
+                '}';
+    }
+
 }

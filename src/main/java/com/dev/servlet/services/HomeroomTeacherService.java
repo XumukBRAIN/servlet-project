@@ -7,6 +7,7 @@ import com.dev.servlet.models.entity.HomeroomTeacher;
 import com.dev.servlet.repositories.HomeroomTeacherRepository;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class HomeroomTeacherService {
@@ -24,18 +25,28 @@ public class HomeroomTeacherService {
     }
 
     public HomeroomTeacherDto getByIdWithStudents(Integer id) {
-        HomeroomTeacher homeroomTeacher = homeroomTeacherRepository.getByIdWithStudents(id);
-        return homeroomTeacherConverter.toDto(homeroomTeacher);
+        HomeroomTeacher entity = homeroomTeacherRepository.getByIdWithStudents(id);
+        if (entity == null) {
+            return new HomeroomTeacherDto();
+        }
+
+        return homeroomTeacherConverter.toDto(entity);
     }
 
     public HomeroomTeacherDto getById(Integer id) {
-        HomeroomTeacher student = homeroomTeacherRepository.getById(id);
-        return homeroomTeacherConverter.toDto(student);
+        HomeroomTeacher entity = homeroomTeacherRepository.getById(id);
+        if (entity == null) {
+            return new HomeroomTeacherDto();
+        }
+        return homeroomTeacherConverter.toDto(entity);
     }
 
     public List<HomeroomTeacherDto> getAll() {
-        List<HomeroomTeacher> students = homeroomTeacherRepository.getAll();
-        return students.stream().map(homeroomTeacherConverter::toDto).collect(Collectors.toList());
+        List<HomeroomTeacher> homeroomTeachers = homeroomTeacherRepository.getAll();
+        return homeroomTeachers.stream()
+                .filter(Objects::nonNull)
+                .map(homeroomTeacherConverter::toDto)
+                .collect(Collectors.toList());
     }
 
     public void delete(Integer id) {

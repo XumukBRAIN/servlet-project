@@ -3,11 +3,14 @@ package com.dev.servlet.configs;
 import com.dev.servlet.converters.HomeroomTeacherConverter;
 import com.dev.servlet.converters.StudentConverter;
 import com.dev.servlet.repositories.HomeroomTeacherRepository;
+import com.dev.servlet.repositories.SecurityRepository;
 import com.dev.servlet.repositories.StudentRepository;
 import com.dev.servlet.services.HomeroomTeacherService;
+import com.dev.servlet.services.SecurityService;
 import com.dev.servlet.services.StudentService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+//TODO: Переделать на Enum
 public class InstanceConfiguration {
     private static ObjectMapper objectMapper = null;
     private static StudentRepository studentRepository = null;
@@ -16,6 +19,8 @@ public class InstanceConfiguration {
     private static HomeroomTeacherRepository homeroomTeacherRepository = null;
     private static HomeroomTeacherConverter homeroomTeacherConverter = null;
     private static HomeroomTeacherService homeroomTeacherService = null;
+    private static SecurityService securityService = null;
+    private static SecurityRepository securityRepository = null;
 
     public static ObjectMapper getObjectMapperInstance() {
         if (objectMapper == null) {
@@ -27,7 +32,7 @@ public class InstanceConfiguration {
 
     public static StudentRepository getStudentRepositoryInstance() {
         if (studentRepository == null) {
-            studentRepository = new StudentRepository();
+            studentRepository = new StudentRepository(DataSourceConfiguration.getDataSourceProperties());
         }
 
         return studentRepository;
@@ -51,7 +56,7 @@ public class InstanceConfiguration {
 
     public static HomeroomTeacherRepository getHomeroomTeacherRepositoryInstance() {
         if (homeroomTeacherRepository == null) {
-            homeroomTeacherRepository = new HomeroomTeacherRepository("url", "username", "password");
+            homeroomTeacherRepository = new HomeroomTeacherRepository(DataSourceConfiguration.getDataSourceProperties());
         }
 
         return homeroomTeacherRepository;
@@ -71,5 +76,21 @@ public class InstanceConfiguration {
         }
 
         return homeroomTeacherConverter;
+    }
+
+    public static SecurityService getSecurityServiceInstance() {
+        if (securityService == null) {
+            securityService = new SecurityService();
+        }
+
+        return securityService;
+    }
+
+    public static SecurityRepository getSecurityRepositoryInstance() {
+        if (securityRepository == null) {
+            securityRepository = new SecurityRepository(DataSourceConfiguration.getDataSourceProperties());
+        }
+
+        return securityRepository;
     }
 }

@@ -7,6 +7,7 @@ import com.dev.servlet.converters.StudentConverter;
 import com.dev.servlet.repositories.StudentRepository;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class StudentService {
@@ -24,13 +25,20 @@ public class StudentService {
     }
 
     public StudentDto getById(Integer id) {
-        Student student = studentRepository.getById(id);
-        return studentConverter.toDto(student);
+        Student entity = studentRepository.getById(id);
+        if (entity == null) {
+            return new StudentDto();
+        }
+
+        return studentConverter.toDto(entity);
     }
 
     public List<StudentDto> getAll() {
         List<Student> students = studentRepository.getAll();
-        return students.stream().map(studentConverter::toDto).collect(Collectors.toList());
+        return students.stream()
+                .filter(Objects::nonNull)
+                .map(studentConverter::toDto)
+                .collect(Collectors.toList());
     }
 
     public void delete(Integer id) {

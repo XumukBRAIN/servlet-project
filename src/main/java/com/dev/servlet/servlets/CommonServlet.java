@@ -24,25 +24,23 @@ public class CommonServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
         String action = req.getHeader(ACTION);
-        switch (action) {
-            case "specializations":
-                try {
-                    resp.setCharacterEncoding(UTF_8);
-                    resp.setContentType(APPLICATION_JSON);
-                    resp.getWriter().write(objectMapper.writeValueAsString(
-                            Arrays.stream(Specialization.values()).map(Specialization::getTitle).toArray())
-                    );
-                } catch (IOException e) {
-                    throw new RuntimeException("Ошибка в ходе выполнения метода doGet#specializations в классе CommonServlet: " + e);
-                }
-            default:
-                try {
-                    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                    resp.setContentType(TEXT_PLAIN);
-                    resp.getWriter().write("Неизвестная doGet команда для получения общих данных");
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+        if (action.equals("specializations")) {
+            try {
+                resp.setCharacterEncoding(UTF_8);
+                resp.setContentType(APPLICATION_JSON);
+                resp.getWriter().write(objectMapper.writeValueAsString(
+                        Arrays.stream(Specialization.values()).map(Specialization::getTitle).toArray())
+                );
+            } catch (IOException e) {
+                throw new RuntimeException("Ошибка в ходе выполнения метода doGet#specializations в классе CommonServlet: " + e);
+            }
+        }
+        try {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.setContentType(TEXT_PLAIN);
+            resp.getWriter().write("Неизвестная doGet команда для получения общих данных");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }
